@@ -1,9 +1,12 @@
 (ns bauble.core
+  (:refer-clojure :exclude [chunk])
   (:require [clojure.xml :as xml]
             [clojure.zip :as zip]
             [clojure.string :as string]
             [me.raynes.fs :as fs]
             [cheshire.core :refer :all]
+            [opennlp.nlp :as nlp]
+            [opennlp.tools.filters :refer :all]
             [flambo.conf :as conf]
             [flambo.api :as f :refer [defsparkfn]])
   (import [org.jsoup Jsoup])
@@ -11,14 +14,24 @@
 
 (def spark-conf (-> (conf/spark-conf)
                     (conf/master "local")
+                    (conf/set "spark.akka.timeout" "300")
                     (conf/app-name "bauble")))
-
 (def spark-context (f/spark-context spark-conf))
-
-(def stopwords #{"a" "all" "and" "any" "are" "is" "in" "of" "on" "or" "our" "so"
-                 "this" "the" "that" "to" "we"})
-
+(def stopwords #{})
 (def analysis-directory-path "analysis")
+(def opennlp-models-directory-path "lib/opennlp/models")
+
+(defn model-path [model-name]
+  (let [path #(str opennlp-models-directory-path %)]
+    (get {:token (path "/en-token.bin")
+          ;; :detoken (path "/english-detokenizer.xml")
+          :sentences (path "/en-sent.bin")
+          :pos-tag (path "/en-pos-maxent.bin")
+          :chunker (path "/en-chunker.bin")}
+         model-name)))
+
+(def tokenize (nlp/make-tokenizer (model-path :token)))
+(def tag-parts-of-speech (nlp/make-pos-tagger (model-path :pos-tag)))
 
 (defn- strip-html-tags [s] (.text (Jsoup/parse s)))
 
@@ -33,12 +46,12 @@
 (defn- filtered-document-terms [[_ content] stopwords]
   (->> content
        (strip-html-tags)
-       (#(string/split % #"( |\n)"))
-       (remove empty?)
-       (remove #(stopwords (string/lower-case %)))
-       (map #(string/replace % #"\W+" " "))
-       (remove (partial = " "))
-       (map string/trim)))
+       (tokenize)
+       (remove empty?) ;; https://github.com/dakrone/clojure-opennlp/pull/38
+       (tag-parts-of-speech)
+       (nouns-and-verbs)
+       (map first)
+       (remove #(stopwords (string/lower-case %)))))
 
 ;; [id content] -> ([id term-1 term-1-frequency terms-count]
 ;;                  [id term-2 term-2-frequency terms-count]

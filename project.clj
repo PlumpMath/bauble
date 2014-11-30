@@ -8,9 +8,12 @@
                  [me.raynes/fs "1.4.6"]
                  [cheshire "5.3.1"]
                  [yieldbot/flambo "0.4.0-SNAPSHOT"]]
+  :git-dependencies  [["https://github.com/mpereira/clojure-opennlp.git"]]
+  :source-paths  [".lein-git-deps/clojure-opennlp/src/"]
   :main ^:skip-aot bauble.core
   :target-path "target/%s"
-  :plugins  [[cider/cider-nrepl "0.8.1"]]
+  :plugins  [[cider/cider-nrepl "0.8.1"]
+             [lein-git-deps "0.0.2-SNAPSHOT"]]
   :profiles {:provided
              {:dependencies [[org.apache.spark/spark-core_2.10 "1.1.0"]]}
              :dev

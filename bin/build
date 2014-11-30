@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+readonly SCRIPT_DIRECTORY=$(dirname ${0})
+
+${SCRIPT_DIRECTORY}/../scripts/bootstrap.sh
+lein uberjar
