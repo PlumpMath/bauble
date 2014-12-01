@@ -9,7 +9,7 @@
                  [cheshire "5.3.1"]
                  [yieldbot/flambo "0.4.0-SNAPSHOT"]]
   :git-dependencies  [["https://github.com/mpereira/clojure-opennlp.git"]]
-  :source-paths  [".lein-git-deps/clojure-opennlp/src/"]
+  :source-paths ["src" ".lein-git-deps/clojure-opennlp/src/"]
   :main ^:skip-aot bauble.core
   :target-path "target/%s"
   :plugins  [[cider/cider-nrepl "0.8.1"]
