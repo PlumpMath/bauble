@@ -13,7 +13,7 @@
   (:gen-class))
 
 (def spark-conf (-> (conf/spark-conf)
-                    (conf/master "local")
+                    (conf/master "local[*]")
                     (conf/set "spark.akka.timeout" "300")
                     (conf/app-name "bauble")))
 (def spark-context (f/spark-context spark-conf))
